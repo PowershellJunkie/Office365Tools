@@ -1,5 +1,5 @@
 # Office365Tools
-This repository is for all of my Powershell Office 365 tools. If you like them, great! If not and I suck, thanks for stopping by!
+This repository is for all of my Powershell Active Directory tools. If you like them, great! If not and I suck, thanks for stopping by!
 Also, you may notice I don't do the typical <# .Synopsis, .Purpose, .General-Self-Wanking #> that other Powershell guys do. 
 And, more importantly, I never will.
 Here's my view: 
@@ -18,7 +18,6 @@ No, seriously:
 STOP. 
 IT.
 Clean code.
-Clean comments.
 Code that works.
+Clean comments.
 Comments that help.
-Balanced Life.
