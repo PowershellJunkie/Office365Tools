@@ -16,13 +16,13 @@ $TargetOU = "OU=Your OU,DC=somecompany,DC=com"
 # Clear the relevant Active Directory fields
 Import-CSV $borked | Foreach-Object{
 
-$user = $_.User
+	$user = $_.User
 
-get-aduser $user| set-aduser -clear msExchMailboxGuid,msExchHomeServerName,legacyExchangeDN,mail,mailNickname,msExchMailboxSecurityDescriptor,msExchPoliciesIncluded,msExchRecipientDisplayType,msExchRecipientTypeDetails,msExchUMDtmfMap,msExchUserAccountControl,msExchVersion
+	get-aduser $user| set-aduser -clear msExchMailboxGuid,msExchHomeServerName,legacyExchangeDN,mail,mailNickname,msExchMailboxSecurityDescriptor,msExchPoliciesIncluded,msExchRecipientDisplayType,msExchRecipientTypeDetails,msExchUMDtmfMap,msExchUserAccountControl,msExchVersion
 
-$UserDN = (Get-ADUser -Identity $user).distinguishedName
-Write-Host "Moving Accounts to Non-Synced OU..."
-Move-ADObject -Identity $UserDN -TargetPath $TargetOU
+	$UserDN = (Get-ADUser -Identity $user).distinguishedName
+	Write-Host "Moving Accounts to Non-Synced OU..."
+	Move-ADObject -Identity $UserDN -TargetPath $TargetOU
 
 }
 Write-Host "Completed Moves. Beginning ADFS Sync."
@@ -43,8 +43,8 @@ Import-PSSession $Session -DisableNameChecking -AllowClobber
 
 Import-CSV $borked | ForEach-Object{
 
-$user = $_.User
+	$user = $_.User
 
-Get-User $user | Enable-Mailbox
+	Get-User $user | Enable-Mailbox
 	
 }
