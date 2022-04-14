@@ -1,6 +1,12 @@
-# Build Arrays of users from Active Directory who are enabled and who are from the Offices and Locations for each distribution list.
-# It's critically important to remember that this script will only edit Old-Fashioned distribution lists in Exchange Online. A different cmdlet set is required for modifying Microsoft 365 Groups
+<#
+This script has examples for modifying regular, old-fashioned Distribution Groups as well as Microsoft 365 groups.
+Add-DistributionGroupMember is the commandlet used to modify Distribution groups
+Add-UnifiedGroupLinks is the commandlet used to modify Microsoft 365 groups
+If you are using on-prem Active Directory to pull your user list (as done in this script), the same kind of queries can be used to get the information
+needed to update 365 groups as well as Distro lists... as long as you remember to get the 'UserPrincipalName' attribute and use that as your user identity
+#>
 
+# Build Arrays of users from Active Directory who are enabled and who are from the Offices and Locations for each distribution list.
 $region1 = @()
 $1det = Get-ADuser -Filter {Enabled -eq $True} -Properties UserPrincipalName,PhysicalDeliveryOfficeName,sAMAccountName | Select-Object UserPrincipalName,PhysicalDeliveryOfficeName | Where {$_.PhysicalDeliveryOfficeName -like "*PrimaryLocationName*"}
 $region1 += $1det
