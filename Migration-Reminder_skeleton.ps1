@@ -39,7 +39,8 @@ Get-ADUser -Identity $user -Properties mail,msExchRemoteRecipientType,sAMAccount
 }
 
 # Okay, this array might seem silly, since all we're doing is taking the results of our migration check and dumping it to a new array
-# But stay with me here: It's actually shorter (in terms of actually writing code) to simply translate it this way versus creating custom powershell objects and then cross translating them. 
+# But stay with me here: It's actually shorter (in terms of actually writing code) to simply translate it this way versus creating custom powershell objects 
+# and then cross translating them. 
 # Programmatically, I personally found no difference, but I didn't ever have to process more than about 200 users per shot. Your mileage may vary.
 
 $remarray = @()
