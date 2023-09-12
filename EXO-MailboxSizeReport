@@ -1,0 +1,105 @@
+#---Domain Users to exclude from your AD Search---#
+$rmarray = @('excluded','samaccountnames','fromyour','addomain')
+
+#---Additional UPN's to skip; useful when samaccount names don't match UPN's---#
+$npc = @('someuser@yourdomain.com','someotheruser@yourdomain.com')
+
+#---Get users from your specific active user OU, filter for enabled users only and exclude test/dummy users by the prior arrays---#
+$users = Get-ADUser -SearchBase "OU=<your user sub-ou>,OU=<ou name>,DC=<domain>,DC=<domain>" -Filter {Enabled -eq $true -and sAMAccountName -notlike "*test*"} -Properties sAMAccountName,UserPrincipalName | Select  sAMAccountName,UserPrincipalName | Where {$rmarray -notcontains $_.sAMAccountName -or $npc -notcontains $_.UserPrincipalName} | Select -ExpandProperty UserPrincipalName
+
+#---Build workable, re-sizable array---#
+[System.Collections.ArrayList]$sizelist = @()
+
+#---Enforce powershell's use of TLS1.2 (required by ExO)---#
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+
+#------Connect to Exchange Online using Secure Certificate------
+Connect-ExchangeOnline -AppId <your app ID> -CertificateThumbprint <your certificate thumbprint> -Organization "yourdomain.onmicrosoft.com"
+$ErrorActionPreference = 'SilentlyContinue'
+
+ForEach($user in $users){
+    $mailbox = Get-EXOMailboxStatistics -Identity $user | Select DisplayName,TotalItemSize
+    $val = [pscustomobject]@{
+        DisplayName = $mailbox.DisplayName
+        UPN = $user
+        MailboxSize = $mailbox.TotalItemSize
+        }
+        $sizelist.Add($val) | Out-Null
+        $val = $null
+        
+        }
+
+$final = $sizelist | Sort-Object -Property MailboxSize -Descending | ConvertTo-Html -as Table -Fragment
+
+#-----Setup HTML body for email report-----
+$Htmlbody = @" 
+<html> 
+<head>
+<style>
+body {
+    Color: #252525;
+    font-family: Verdana,Arial;
+    font-size:11pt;
+}
+table {border: 1px solid rgb(0,0,0); text-align: left;}
+th {background-color: #F317DC;border-bottom:2px solid rgb(23,219,7);text-align: left;}
+tr {border-bottom:2px solid rgb(219,7,194);text-align: left;}
+td {border-bottom:1px solid rgb(99,105,112);text-align: left;}
+h1 {
+    text-align: left;
+    color:#5292f9;
+    Font-size: 34pt;
+    font-family: Verdana, Arial;
+}
+h2 {
+    text-align: left;
+    color:#323a33;
+    Font-size: 20pt;
+}
+h3 {
+    text-align: center;
+    color:#211b1c;
+    Font-size: 15pt;
+}
+h4 {
+    text-align: left;
+    color:#05f5c7;
+    Font-size: 15pt;
+}
+h5 {
+    text-align: center;
+    color:#2a2d2a;
+    Font-size: 12pt;
+}
+a:link {
+    color:#0098e5;
+    text-decoration: underline;
+    cursor: auto;
+    font-weight: 500;
+}
+a:visited {
+    color:#05a3b7;
+    text-decoration: underline;
+    cursor: auto;
+    font-weight: 500;
+}
+</style>
+</head>
+<body>
+<h1>Mailbox Sizes</h1> 
+<br><br><br>
+<h4>Mailboxes</h4>
+$final
+
+
+
+</body> 
+</html> 
+"@ 
+
+
+#------Email the report------
+
+Send-MailMessage -To "someguy@yourdomain.com" -From "someaccount@yourdomain.com" -Subject "Cloud Mailbox Usage Report" -BodyAsHtml $Htmlbody -SmtpServer <yourdomain-com>.mail.protection.outlook.com 
+
+Disconnect-ExchangeOnline -Confirm:$false
