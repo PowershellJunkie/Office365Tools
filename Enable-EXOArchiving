@@ -1,0 +1,26 @@
+#--Enables online archiving for all currently active mailboxes in your ExO tenant, runs unattended--#
+#------Force the use of TLS 1.2------
+
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+
+#------Connect to Exchange Online using Secure Certificate------
+
+Connect-ExchangeOnline -AppId a3f65bab-83a5-476d-86f5-1f959e5d32ef -CertificateThumbprint fc185005e235109b783dfc2ff972af152156ff71 -Organization "thebloodconnection.onmicrosoft.com"
+$ErrorActionPreference = 'SilentlyContinue'
+
+#-----Query to get all active mailboxes that are not already archived-----
+
+$archiveme = Get-Mailbox -ResultSize Unlimited | Select DisplayName,UserPrincipalName,ArchiveStatus | Where {$_.ArchiveStatus -like "*None*" -or $_.ArchiveStatus -eq $null}
+
+#----Archive all mailboxes from previous query----
+
+$archiveme | ForEach-Object{
+
+    $user = $_.UserPrincipalName
+    Enable-Mailbox -Identity $user -Archive
+    
+    }
+
+#---Clean up ExO Connection---
+
+Disconnect-ExchangeOnline -Confirm:$false
